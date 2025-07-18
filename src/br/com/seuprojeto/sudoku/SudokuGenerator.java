@@ -1,9 +1,6 @@
 package br.com.seuprojeto.sudoku;
 
-import java.util.Random;
-import java.util.Collections;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class SudokuGenerator {
 
@@ -74,7 +71,6 @@ public class SudokuGenerator {
     private void removeNumbers(SudokuBoard board, Difficulty difficulty) {
         int clues = difficulty.getClues();
         int cellsToRemove = 81 - clues;
-        Random random = new Random();
 
         while (cellsToRemove > 0) {
             int row = random.nextInt(9);
@@ -84,7 +80,7 @@ public class SudokuGenerator {
                 int backup = board.getCell(row, col).getValue();
                 board.getCell(row, col).setValue(0);
 
-                SudokuBoard copy = copyBoard(board);
+                SudokuBoard copy = new SudokuBoard(board);
                 SudokuSolver solver = new SudokuSolver();
                 if (!solver.solve(copy)) {
                     board.getCell(row, col).setValue(backup);
@@ -93,15 +89,5 @@ public class SudokuGenerator {
                 }
             }
         }
-    }
-
-    private SudokuBoard copyBoard(SudokuBoard board) {
-        SudokuBoard newBoard = new SudokuBoard();
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                newBoard.getCell(i, j).setValue(board.getCell(i, j).getValue());
-            }
-        }
-        return newBoard;
     }
 }

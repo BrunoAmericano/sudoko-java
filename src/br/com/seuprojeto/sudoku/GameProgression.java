@@ -5,7 +5,7 @@ public class GameProgression {
     private Difficulty currentDifficulty;
 
     public GameProgression() {
-        this.currentDifficulty = Difficulty.EASY;  // começa no fácil
+        this.currentDifficulty = Difficulty.EASY;
     }
 
     public Difficulty getCurrentDifficulty() {
