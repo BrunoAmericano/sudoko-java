@@ -8,6 +8,11 @@ public class SudokuGame {
     }
 
     public void startNewGame(Difficulty difficulty) {
-        // Aqui iremos gerar um novo jogo baseado na dificuldade
+        SudokuGenerator generator = new SudokuGenerator();
+        this.board = generator.generate(difficulty);
+    }
+
+    public SudokuBoard getBoard() {
+        return board;
     }
 }
