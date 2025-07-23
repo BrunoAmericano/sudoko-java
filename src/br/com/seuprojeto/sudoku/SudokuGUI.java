@@ -1,117 +1,113 @@
 package br.com.seuprojeto.sudoku;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 
 public class SudokuGUI extends JFrame {
-
-    private final JTextField[][] cells = new JTextField[9][9];
-    private final GameProgression progression = new GameProgression();
     private SudokuBoard currentBoard;
-    private final SudokuGenerator generator = new SudokuGenerator();
-    private final SudokuSolver solver = new SudokuSolver();
+    private SudokuSolver solver;
+    private JTextField[][] cells;
+    private Timer gameTimer;
+    private int secondsElapsed = 0;
+    private JLabel timerLabel;
 
     public SudokuGUI() {
-        super("Ctrl+Alt+Delirium - Sudoku");
+        super("Sudoku Java - Fase 6");
 
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
-        setSize(600, 700);
-        setLocationRelativeTo(null);
+        currentBoard = new SudokuBoard();
+        solver = new SudokuSolver();
+        cells = new JTextField[9][9];
+
+        generateBoard(); // método para gerar números iniciais aleatórios
 
         JPanel gridPanel = new JPanel(new GridLayout(9, 9));
-        Font cellFont = new Font("Monospaced", Font.BOLD, 20);
+        Font cellFont = new Font("Arial", Font.BOLD, 20);
 
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
                 JTextField cell = new JTextField();
                 cell.setHorizontalAlignment(JTextField.CENTER);
                 cell.setFont(cellFont);
-                cell.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+
+                // Borda destacando blocos 3x3
+                int top = (row % 3 == 0) ? 2 : 1;
+                int left = (col % 3 == 0) ? 2 : 1;
+                int bottom = (row == 8) ? 2 : 1;
+                int right = (col == 8) ? 2 : 1;
+                cell.setBorder(BorderFactory.createMatteBorder(top, left, bottom, right, Color.BLACK));
+
+                if (currentBoard.getCell(row, col).getValue() != 0) {
+                    cell.setText(String.valueOf(currentBoard.getCell(row, col).getValue()));
+                    cell.setEditable(false);
+                    cell.setBackground(new Color(220, 220, 220));
+                }
+
                 cells[row][col] = cell;
                 gridPanel.add(cell);
             }
         }
-        add(gridPanel, BorderLayout.CENTER);
 
-        JPanel buttonPanel = new JPanel();
+        JButton btnSolve = new JButton("Resolver");
+        btnSolve.addActionListener(e -> solveBoard());
 
         JButton btnCheck = new JButton("Verificar");
         btnCheck.addActionListener(e -> checkSolution());
 
-        JButton btnNew = new JButton("Novo Jogo");
-        btnNew.addActionListener(e -> loadBoard(progression.getCurrentDifficulty()));
-
-        JButton btnNext = new JButton("Avançar Nível");
-        btnNext.addActionListener(e -> advanceLevel());
-
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(btnSolve);
         buttonPanel.add(btnCheck);
-        buttonPanel.add(btnNew);
-        buttonPanel.add(btnNext);
+
+        timerLabel = new JLabel("Tempo: 0s");
+        setupTimer();
+
+        setLayout(new BorderLayout());
+        add(timerLabel, BorderLayout.NORTH);
+        add(gridPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
 
-        loadBoard(progression.getCurrentDifficulty());
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(600, 700);
         setVisible(true);
     }
 
-    private void loadBoard(Difficulty difficulty) {
-        currentBoard = generator.generate(difficulty);
+    private void setupTimer() {
+        gameTimer = new Timer(1000, e -> {
+            secondsElapsed++;
+            timerLabel.setText("Tempo: " + secondsElapsed + "s");
+        });
+        gameTimer.start();
+    }
 
-        for (int row = 0; row < 9; row++) {
+    private void generateBoard() {
+        // Geração simples de teste – insere aleatórios apenas no primeiro bloco
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                currentBoard.getCell(i, j).setValue((i * 3 + j + 1));
+    }
+
+    private void solveBoard() {
+        solver.solve(currentBoard);
+        for (int row = 0; row < 9; row++)
             for (int col = 0; col < 9; col++) {
-                int val = currentBoard.getCell(row, col).getValue();
-                JTextField cell = cells[row][col];
-                if (val != 0) {
-                    cell.setText(String.valueOf(val));
-                    cell.setEditable(false);
-                    cell.setBackground(new Color(220, 220, 220));
-                } else {
-                    cell.setText("");
-                    cell.setEditable(true);
-                    cell.setBackground(Color.WHITE);
-                }
+                cells[row][col].setText(String.valueOf(currentBoard.getCell(row, col).getValue()));
+                cells[row][col].setEditable(false);
+                cells[row][col].setBackground(new Color(200, 255, 200));
             }
-        }
+        gameTimer.stop();
+        JOptionPane.showMessageDialog(this, "Solução exibida!", "Info", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void checkSolution() {
-        for (int row = 0; row < 9; row++) {
-            for (int col = 0; col < 9; col++) {
-                JTextField cell = cells[row][col];
-                String text = cell.getText().trim();
-                if (text.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Preencha todas as células!", "Erro", JOptionPane.ERROR_MESSAGE);
+        // Verifica se todas as células estão preenchidas (modo simples)
+        for (int row = 0; row < 9; row++)
+            for (int col = 0; col < 9; col++)
+                if (cells[row][col].getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Ainda há células vazias.", "Aviso", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                try {
-                    int val = Integer.parseInt(text);
-                    if (val < 1 || val > 9) {
-                        JOptionPane.showMessageDialog(this, "Valores devem estar entre 1 e 9!", "Erro", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                    currentBoard.getCell(row, col).setValue(val);
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Digite apenas números!", "Erro", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-            }
-        }
-
-        if (solver.solve(new SudokuBoard(currentBoard))) {
-            JOptionPane.showMessageDialog(this, "Parabéns! Sudoku resolvido corretamente!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this, "Solução incorreta, tente novamente.", "Erro", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void advanceLevel() {
-        progression.advanceLevel();
-        Difficulty current = progression.getCurrentDifficulty();
-        if (progression.isMaxLevel()) {
-            JOptionPane.showMessageDialog(this, "Você já está no nível máximo!", "Aviso", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this, "Avançando para o nível: " + current, "Info", JOptionPane.INFORMATION_MESSAGE);
-        }
-        loadBoard(current);
+        gameTimer.stop();
+        JOptionPane.showMessageDialog(this, "Parabéns! Sudoku completo.", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
     }
 }
