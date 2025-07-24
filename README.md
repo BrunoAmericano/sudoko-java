@@ -1,6 +1,6 @@
 # 🎯 Ctrl+Alt+Sudoku
 
-![Build](https://github.com/BrunoAmericano/sudoku-java/actions/workflows/java-ci.yml/badge.svg)
+![Build]([https://github.com/BrunoAmericano/sudoku-java/actions/workflows/java-ci.yml/badge.svg](https://github.com/BrunoAmericano/sudoko-java/blob/main/Screenshot_1.png?raw=true))
 
 > 🧠 **“Sudoku não é apenas um jogo, é um exercício de lógica que mantém sua mente tão afiada quanto seu código.”**
 
